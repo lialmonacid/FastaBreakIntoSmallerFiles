@@ -15,11 +15,11 @@ def Usage():
     print "\nMandatory options:"
     print "\t-i, --input=FILE"
     print "\t\tThe input FASTA file that is going to be split in smaller file."
+    print "\t-n, --number"
+    print "\t\tThe number of sequences that will be in each smaller fasta file."
     print "\nOther options:"
     print "\t-h, --help"
     print "\t\tShow the options of the program."
-    print "\t-n, --number"
-    print "\t\tThe number of sequences that will be in each smaller fasta file."
     print "\n"
     sys.exit(1)
 
@@ -46,6 +46,7 @@ def SetOptions(argv):
             if not opt_flag['n']:
                 try:
                     OPT_NUMBER_FLAG=int(argu)
+                    opt_flag['n'] = True
                     if OPT_NUMBER_FLAG < 1:
                         print >> sys.stderr , "\n[ERROR]: The number of sequences per file is set to less than 1. Option -n / --number must be an integer > 0.\n"
                         sys.exit(1)
@@ -58,8 +59,12 @@ def SetOptions(argv):
         elif opt in ('-h', '--help'):
             Usage()
     
+    # Cheking if mandatory parameter are set.
     if not opt_flag['i']:
         print >> sys.stderr , "\n[ERROR]: Input file not defined. Option -i / --input.\n"
+        sys.exit(1)
+    if not opt_flag['n']:
+        print >> sys.stderr , "\n[ERROR]: The number of sequences per file is not defined. Option -n / --number.\n"
         sys.exit(1)
     
 # Funtion that extract the file name and its extension.
@@ -74,14 +79,14 @@ SetOptions(sys.argv[1:])
 current_number_of_sequences_in_file = 0
 file_number = 0
 file_name_output , file_extension_output = getFileNameAndExtension(OPT_INPUT_FILE)
-new_fasta_file = open(file_name_output + str(file_number) + file_extension_output , "w")
+new_fasta_file = open(file_name_output +"."+ str(file_number) + file_extension_output , "w")
 
 # Reading the FASTA file.
 for record in SeqIO.parse(open(OPT_INPUT_FILE, "rU"), "fasta"):
-    if current_number_of_sequences_in_file > OPT_NUMBER_FLAG: # the expected number of sequences per file has been reached
+    if current_number_of_sequences_in_file >= OPT_NUMBER_FLAG: # the expected number of sequences per file has been reached
         new_fasta_file.close()
-        new_fasta_file = open(file_name_output + str(file_number) + file_extension_output, "w")
+        new_fasta_file = open(file_name_output +"."+ str(file_number) + file_extension_output , "w")
         current_number_of_sequences_in_file = 0
         file_number = file_number + 1
-    new_fasta_file.write(">"+record.id+"\n"+record.seq+"\n")
+    new_fasta_file.write(">"+str(record.id)+"\n"+str(record.seq)+"\n")
     current_number_of_sequences_in_file = current_number_of_sequences_in_file + 1
